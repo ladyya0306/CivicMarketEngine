@@ -37,6 +37,32 @@ def test_container_template_has_no_oasis_or_key_like_secret() -> None:
     assert "OPENAI_API_KEY=replace-with-your-openai-api-key" in joined
 
 
+def test_generated_public_readme_is_bilingual_and_plain_language(tmp_path: Path) -> None:
+    snapshot_dir = tmp_path / "civic_public_snapshot"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "build_public_snapshot.py"),
+            "--output",
+            str(snapshot_dir),
+            "--force",
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+
+    readme = (snapshot_dir / "README.md").read_text(encoding="utf-8")
+
+    assert "## 中文" in readme
+    assert "## English" in readme
+    assert "谁会来买？" in readme
+    assert "Can those buyers afford it?" in readme
+    assert "不是投资建议" in readme
+    assert "not investment advice" in readme
+
+
 def test_public_snapshot_checker_blocks_generated_artifacts(tmp_path: Path) -> None:
     (tmp_path / "README.md").write_text("# demo\n", encoding="utf-8")
     result = subprocess.run(
