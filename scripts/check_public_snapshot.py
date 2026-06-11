@@ -175,6 +175,9 @@ def scan_snapshot(root: Path) -> list[dict[str, str]]:
     for path in root.rglob("*"):
         if not path.is_file():
             continue
+        rel = path.relative_to(root)
+        if rel.parts and rel.parts[0] == ".git":
+            continue
         reason = _is_forbidden(path, root)
         if reason:
             findings.append({"path": path.relative_to(root).as_posix(), "reason": reason})

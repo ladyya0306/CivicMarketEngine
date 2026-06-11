@@ -62,6 +62,21 @@ def test_public_snapshot_checker_blocks_generated_artifacts(tmp_path: Path) -> N
     assert payload["findings"][0]["path"].startswith("results/")
 
 
+def test_public_snapshot_checker_allows_root_git_metadata(tmp_path: Path) -> None:
+    (tmp_path / "README.md").write_text("# demo\n", encoding="utf-8")
+    (tmp_path / ".git").mkdir()
+    (tmp_path / ".git" / "config").write_text("[core]\nrepositoryformatversion = 0\n", encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "check_public_snapshot.py"), str(tmp_path), "--json"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout
+    payload = json.loads(result.stdout)
+    assert payload["ok"] is True
+
+
 def test_public_snapshot_checker_blocks_private_boundaries(tmp_path: Path) -> None:
     private_files = [
         tmp_path / "AGENTS.md",
@@ -156,6 +171,11 @@ def test_public_snapshot_builder_creates_clean_snapshot(tmp_path: Path) -> None:
     assert not (snapshot_dir / ".env.deepseek.example").exists()
     assert not (snapshot_dir / "scripts" / "run_formal_medium_matrix.py").exists()
     assert not (snapshot_dir / "scripts" / "run_night_simulation.ps1").exists()
+    container_readme = (snapshot_dir / ".container" / "README.md").read_text(encoding="utf-8")
+    assert "agent_behavior.py" not in container_readme
+    assert "simulation_runner.py" not in container_readme
+    assert "real_estate_demo_v2_1.py" not in container_readme
+    assert "live LLM" not in container_readme
     smoke = subprocess.run(
         [sys.executable, str(snapshot_dir / "scripts" / "public_smoke_test.py"), "--rounds", "1", "--seed", "42"],
         text=True,

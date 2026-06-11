@@ -1,8 +1,9 @@
-# Atlas Market Engine Development Container
+# CivicMarketEngine Development Container
 
-This folder contains an optional local development container for Atlas Market
-Engine. It is intended for repeatable local testing and does not include any
-private credentials or generated run results.
+This folder contains an optional local development container for the public
+noncommercial demo package. It is intended for repeatable local checks and
+does not include private credentials, private prompt material, or generated
+run results.
 
 ## Prerequisites
 
@@ -11,16 +12,15 @@ private credentials or generated run results.
 
 ## Configure Environment
 
-Create a local `.env` file from the template. Do not commit `.env`.
+Create a local `.env` file from the public template only when needed. Do not
+commit `.env`.
 
 ```bash
 cd .container
 cp .env.example .env
 ```
 
-Edit `.env` and replace the placeholder values with your own keys only when
-you need live LLM or external API calls. For offline smoke tests, prefer mock
-mode.
+The offline public smoke test does not require external service credentials.
 
 ## Start Container
 
@@ -28,20 +28,18 @@ mode.
 docker compose up -d
 ```
 
-This builds the local image and starts the `atlas-market-engine-dev`
-container with the repository mounted at `/workspace/atlas-market-engine`.
-
 ## Enter the Container
 
 ```bash
 docker compose exec atlas-market-engine bash
 ```
 
-Typical checks:
+Typical public checks:
 
 ```bash
-python -m compileall agent_behavior.py database.py simulation_runner.py real_estate_demo_v2_1.py
-python -m pytest
+python scripts/check_public_snapshot.py .
+python scripts/public_smoke_test.py --rounds 1 --seed 42
+python -m pytest tests/test_public_package.py -q
 ```
 
 ## Stop and Remove
@@ -52,6 +50,6 @@ docker compose down
 
 ## Public Package Boundary
 
-The container setup is a development aid only. Public or registration
-snapshots must still exclude local `.env` files, `results/`, `output/`,
-`logs/`, database files, caches, and other generated artifacts.
+The container setup is a development aid only. Public snapshots must still
+exclude local `.env` files, result folders, logs, databases, spreadsheets,
+caches, and any private research workspace material.

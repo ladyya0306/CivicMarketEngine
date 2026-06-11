@@ -222,6 +222,64 @@ python ./scripts/public_smoke_test.py --rounds 1 --seed 42
 """
 
 
+CONTAINER_README_TEXT = """# CivicMarketEngine Development Container
+
+This folder contains an optional local development container for the public
+noncommercial demo package. It is intended for repeatable local checks and
+does not include private credentials, private prompt material, or generated
+run results.
+
+## Prerequisites
+
+- Docker: https://docs.docker.com/engine/install/
+- Docker Compose: https://docs.docker.com/compose/install/
+
+## Configure Environment
+
+Create a local `.env` file from the public template only when needed. Do not
+commit `.env`.
+
+```bash
+cd .container
+cp .env.example .env
+```
+
+The offline public smoke test does not require external service credentials.
+
+## Start Container
+
+```bash
+docker compose up -d
+```
+
+## Enter the Container
+
+```bash
+docker compose exec atlas-market-engine bash
+```
+
+Typical public checks:
+
+```bash
+python scripts/check_public_snapshot.py .
+python scripts/public_smoke_test.py --rounds 1 --seed 42
+python -m pytest tests/test_public_package.py -q
+```
+
+## Stop and Remove
+
+```bash
+docker compose down
+```
+
+## Public Package Boundary
+
+The container setup is a development aid only. Public snapshots must still
+exclude local `.env` files, result folders, logs, databases, spreadsheets,
+caches, and any private research workspace material.
+"""
+
+
 def _as_rel(path: str) -> Path:
     return Path(path.replace("/", "\\"))
 
@@ -268,7 +326,9 @@ def _copy_file(rel_path: Path, output_dir: Path, copied: list[str], *, required:
     dst = output_dir / rel_path
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, dst)
-    copied.append(rel_path.as_posix())
+    rel_posix = rel_path.as_posix()
+    if rel_posix not in copied:
+        copied.append(rel_posix)
 
 
 def _copy_tree(rel_dir: Path, suffixes: set[str], output_dir: Path, copied: list[str]) -> None:
@@ -290,7 +350,9 @@ def _write_text_file(output_dir: Path, rel_path: str, text: str, copied: list[st
     dst = output_dir / rel
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(text.rstrip() + "\n", encoding="utf-8")
-    copied.append(rel.as_posix())
+    rel_posix = rel.as_posix()
+    if rel_posix not in copied:
+        copied.append(rel_posix)
 
 
 def _write_json_file(output_dir: Path, rel_path: str, payload: dict, copied: list[str]) -> None:
@@ -298,11 +360,14 @@ def _write_json_file(output_dir: Path, rel_path: str, payload: dict, copied: lis
     dst = output_dir / rel
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    copied.append(rel.as_posix())
+    rel_posix = rel.as_posix()
+    if rel_posix not in copied:
+        copied.append(rel_posix)
 
 
 def _write_generated_public_files(output_dir: Path, copied: list[str]) -> None:
     _write_text_file(output_dir, "README.md", README_TEXT, copied)
+    _write_text_file(output_dir, ".container/README.md", CONTAINER_README_TEXT, copied)
     _write_text_file(output_dir, "docs/PUBLIC_RELEASE_BOUNDARY.md", BOUNDARY_TEXT, copied)
     _write_text_file(output_dir, "examples/cli_minimal_repro/README.md", EXAMPLE_README_TEXT, copied)
     _write_text_file(output_dir, "examples/cli_minimal_repro/run_mock_smoke.ps1", EXAMPLE_PS1_TEXT, copied)
