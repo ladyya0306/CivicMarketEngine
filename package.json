@@ -1,0 +1,11 @@
+{
+  "name": "civic-market-engine-public",
+  "version": "1.0.0",
+  "description": "Source-visible noncommercial public demo for CivicMarketEngine.",
+  "scripts": {
+    "test:public": "python -m pytest tests/test_public_package.py -q",
+    "smoke:public": "python scripts/public_smoke_test.py --rounds 1 --seed 42",
+    "check:public": "python scripts/check_public_snapshot.py ."
+  },
+  "license": "SEE LICENSE IN LICENSE"
+}

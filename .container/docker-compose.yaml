@@ -1,0 +1,12 @@
+services:
+  atlas-market-engine:
+    image: atlas-market-engine:localdev
+    container_name: atlas-market-engine-dev
+    build:
+      context: ../
+      dockerfile: .container/Dockerfile
+    volumes:
+      - ../:/workspace/atlas-market-engine
+    env_file:
+      - .env
+    command: ["tail", "-f", "/dev/null"]
